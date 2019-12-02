@@ -1,0 +1,36 @@
+format_version: 4
+pipelines:
+  "mhs-docker-images":
+    group: mhs
+    label_template: "${git[:8]}"
+    materials:
+      git:
+        type: configrepo
+    stages:
+      - build:
+          clean_workspace: true
+          jobs:
+            inbound:
+              resources:
+                - docker
+              tasks:
+                - exec:
+                    command: dojo
+                    arguments:
+                      - ./publish-mhs.sh inbound
+            outbound:
+              resources:
+                - docker
+              tasks:
+                - exec:
+                    command: dojo
+                    arguments:
+                      - ./publish-mhs.sh outbound
+            route:
+              resources:
+                - docker
+              tasks:
+                - exec:
+                    command: dojo
+                    arguments:
+                      - ./publish-mhs.sh route

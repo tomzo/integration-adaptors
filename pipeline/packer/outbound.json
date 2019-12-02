@@ -37,6 +37,15 @@
       "destination": "{{user `app_dir`}}"
     },
     {
+      "type": "shell",
+      "inline": [
+        "apt-get update",
+        "apt-get install -y ca-certificates",
+        "cp {{user `app_dir`}}/common/certs/ca.crt /usr/local/share/ca-certificates/nhs-deductions.crt",
+        "update-ca-certificates"
+      ]
+    },
+    {
       "type": "file",
       "source": "{{user `mhs_common_dir`}}",
       "destination": "{{user `app_dir`}}/{{user `mhs_common_dir`}}"
