@@ -15,22 +15,25 @@ pipelines:
                 - docker
               tasks:
                 - exec:
-                    command: dojo
+                    command: /bin/bash
                     arguments:
-                      - ./publish-mhs.sh inbound
+                      - -c
+                      - ./tasks build_docker inbound
             outbound:
               resources:
                 - docker
               tasks:
                 - exec:
-                    command: dojo
+                    command: /bin/bash
                     arguments:
-                      - ./publish-mhs.sh outbound
+                      - -c
+                      - ./tasks build_docker outbound
             route:
               resources:
                 - docker
               tasks:
                 - exec:
-                    command: dojo
+                    command: /bin/bash
                     arguments:
-                      - ./publish-mhs.sh route
+                      - -c
+                      - ./tasks build_docker route

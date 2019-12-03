@@ -1,0 +1,58 @@
+#!/bin/bash -e
+
+set -Eeo pipefail
+
+AWS_REGION=eu-west-2
+
+function get_aws_secret {
+  secret_id=$1
+  json=$(aws ssm get-parameter --with-decryption --region $AWS_REGION --name $secret_id)
+  if [ $? != 0 ]; then
+    >&2 echo "Failed to obtain AWS secret: $secret_id"
+    exit 5
+  fi
+  echo $json | jq -r ".Parameter.Value"
+}
+
+command="$1"
+case "${command}" in
+  _build_docker)
+    IMAGE_PREFIX=$2
+    if [ -z "$IMAGE_PREFIX" ]; then
+      echo "Please specify one of the images to be built: inbound, outbound, or route"
+      exit 5
+    fi
+    export BUILD_TAG=latest
+    export DOCKER_REGISTRY=327778747031.dkr.ecr.eu-west-2.amazonaws.com
+    eval $(aws ecr get-login --region eu-west-2 --no-include-email)
+    image_tag=$(git rev-parse HEAD)
+    packer build -except publish pipeline/packer/${IMAGE_PREFIX}.json
+    docker tag local/mhs-$IMAGE_PREFIX $DOCKER_REGISTRY/mhs-${IMAGE_PREFIX}:$image_tag
+    docker push $DOCKER_REGISTRY/mhs-${IMAGE_PREFIX}:$image_tag
+    ;;
+  build_docker)
+    dojo "./tasks _build_docker $2"
+    ;;
+  _e2e_tests)
+    export INTEGRATION_TEST_ASID=$(get_aws_secret "/NHS/deductions/opentest-integration_test_asid")
+    if [ -z "$INTEGRATION_TEST_ASID" ]; then
+      echo "Failed to get INTEGRATION_TEST_ASID"
+      exit 1
+    fi
+    export MHS_ADDRESS=https://mhs-outbound.local.internal-mhs.nhs.net
+    export MHS_DYNAMODB_ENDPOINT_URL=https://dynamodb.eu-west-2.amazonaws.com
+    export MHS_DYNAMODB_TABLE_NAME=local-mhs-state
+    export MHS_SYNC_ASYNC_TABLE_NAME=local-mhs-sync-async-state
+    cd integration-tests/integration_tests
+    pipenv install -d
+    pipenv run inttests
+    ;;
+  e2e_tests)
+    dojo -c Dojofile-py "./tasks _e2e_tests"
+    ;;
+  *)
+      echo "Invalid command: '${command}'"
+      exit 1
+      ;;
+esac
+set +e
