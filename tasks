@@ -39,6 +39,7 @@ case "${command}" in
       echo "Failed to get INTEGRATION_TEST_ASID"
       exit 1
     fi
+    export MHS_INBOUND_QUEUE_URL=amqps://b-93946876-8604-4815-8ef3-eb4f1dc68c95-2.mq.eu-west-2.amazonaws.com:5671
     export MHS_ADDRESS=https://mhs-outbound.local.internal-mhs.nhs.net
     export MHS_DYNAMODB_ENDPOINT_URL=https://dynamodb.eu-west-2.amazonaws.com
     export MHS_DYNAMODB_TABLE_NAME=local-mhs-state
