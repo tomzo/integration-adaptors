@@ -3,15 +3,26 @@
 set -Eeo pipefail
 
 AWS_REGION=eu-west-2
+NHS_ENVIRONMENT=dev
 
-function get_aws_secret {
+function get_aws_ssm_secret {
   secret_id=$1
   json=$(aws ssm get-parameter --with-decryption --region $AWS_REGION --name $secret_id)
   if [ $? != 0 ]; then
-    >&2 echo "Failed to obtain AWS secret: $secret_id"
+    >&2 echo "Failed to obtain AWS secret from SSM: $secret_id"
     exit 5
   fi
   echo $json | jq -r ".Parameter.Value"
+}
+
+function get_aws_sm_secret {
+  secret_id=$1
+  json=$(aws secretsmanager get-secret-value --region $AWS_REGION --secret-id $secret_id)
+  if [ $? != 0 ]; then
+    >&2 echo "Failed to obtain AWS secret from Secrets Manager: $secret_id"
+    exit 5
+  fi
+  echo $json | jq -r ".SecretString"
 }
 
 command="$1"
@@ -34,9 +45,19 @@ case "${command}" in
     dojo "./tasks _build_docker $2"
     ;;
   _e2e_tests)
-    export INTEGRATION_TEST_ASID=$(get_aws_secret "/NHS/deductions/opentest-integration_test_asid")
+    export INTEGRATION_TEST_ASID=$(get_aws_ssm_secret "/NHS/deductions/opentest-integration_test_asid")
     if [ -z "$INTEGRATION_TEST_ASID" ]; then
       echo "Failed to get INTEGRATION_TEST_ASID"
+      exit 1
+    fi
+    export MHS_SECRET_INBOUND_QUEUE_USERNAME=$(get_aws_sm_secret "/nhs/${NHS_ENVIRONMENT}/mq/app-username")
+    export MHS_SECRET_INBOUND_QUEUE_PASSWORD=$(get_aws_sm_secret "/nhs/${NHS_ENVIRONMENT}/mq/app-password")
+    if [ -z "$MHS_SECRET_INBOUND_QUEUE_USERNAME" ]; then
+      echo "Failed to get MHS_SECRET_INBOUND_QUEUE_USERNAME"
+      exit 1
+    fi
+    if [ -z "$MHS_SECRET_INBOUND_QUEUE_PASSWORD" ]; then
+      echo "Failed to get MHS_SECRET_INBOUND_QUEUE_PASSWORD"
       exit 1
     fi
     export MHS_INBOUND_QUEUE_URL=amqps://b-93946876-8604-4815-8ef3-eb4f1dc68c95-2.mq.eu-west-2.amazonaws.com:5671
