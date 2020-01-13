@@ -3,7 +3,6 @@
 set -Eeo pipefail
 
 AWS_REGION=eu-west-2
-NHS_ENVIRONMENT=dev
 
 function get_aws_ssm_secret {
   secret_id=$1
