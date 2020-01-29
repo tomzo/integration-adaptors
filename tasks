@@ -78,7 +78,7 @@ case "${command}" in
       exit 1
     fi
     export MHS_INBOUND_QUEUE_URL=amqps://b-93946876-8604-4815-8ef3-eb4f1dc68c95-2.mq.eu-west-2.amazonaws.com:5671
-    export MHS_ADDRESS=https://mhs-outbound.${NHS_ENVIRONMENT}.internal-mhs.nhs.net
+    export MHS_ADDRESS=https://mhs-outbound-${NHS_ENVIRONMENT}.mhs.patient-deductions.nhs.uk
     export MHS_DYNAMODB_ENDPOINT_URL=https://dynamodb.eu-west-2.amazonaws.com
     export MHS_DYNAMODB_TABLE_NAME=${NHS_ENVIRONMENT}-mhs-state
     export MHS_SYNC_ASYNC_TABLE_NAME=${NHS_ENVIRONMENT}-mhs-sync-async-state
