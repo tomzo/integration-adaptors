@@ -41,7 +41,7 @@
       "inline": [
         "apt-get update",
         "apt-get install -y ca-certificates",
-        "cp {{user `app_dir`}}/common/certs/ca.crt /usr/local/share/ca-certificates/nhs-deductions.crt",
+        "cp {{user `app_dir`}}/common/certs/*.crt /usr/local/share/ca-certificates/",
         "update-ca-certificates"
       ]
     },

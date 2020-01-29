@@ -19,6 +19,11 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks build_docker inbound
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks test_docker inbound
             outbound:
               resources:
                 - docker
@@ -28,6 +33,11 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks build_docker outbound
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks test_docker outbound
             route:
               resources:
                 - docker
@@ -37,3 +47,8 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks build_docker route
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks test_docker route
