@@ -36,4 +36,4 @@ def build_sds_connection_tls(ldap_address: str, private_key: str, local_cert: st
 
     server = ldap3.Server(ldap_address, use_ssl=True, tls=load_tls)
     logger.info('0004', 'Creating ldaps connection')
-    return ldap3.Connection(server, auto_bind=True, client_strategy=ldap3.REUSABLE)
+    return ldap3.Connection(server, auto_bind=True, auto_referrals=False, client_strategy=ldap3.REUSABLE)
