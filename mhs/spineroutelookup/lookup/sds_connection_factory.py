@@ -31,7 +31,7 @@ def build_sds_connection_tls(ldap_address: str, private_key: str, local_cert: st
                                                   ca_certs=ca_certs)
 
     load_tls = ldap3.Tls(local_private_key_file=certificates.private_key_path,
-                         local_certificate_file=certificates.local_cert_path, validate=ssl.CERT_REQUIRED,
+                         local_certificate_file=certificates.local_cert_path, validate=ssl.CERT_NONE,
                          version=ssl.PROTOCOL_TLSv1, ca_certs_file=certificates.ca_certs_path)
 
     server = ldap3.Server(ldap_address, use_ssl=True, tls=load_tls)
