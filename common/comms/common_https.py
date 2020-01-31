@@ -43,7 +43,7 @@ class CommonHttps(object):
                                                             client_cert=client_cert,
                                                             client_key=client_key,
                                                             ca_certs=ca_certs,
-                                                            validate_cert=validate_cert,
+                                                            validate_cert=False,
                                                             proxy_host=http_proxy_host,
                                                             proxy_port=http_proxy_port)
         logger.info("0002",
