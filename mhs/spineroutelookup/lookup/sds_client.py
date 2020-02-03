@@ -120,8 +120,9 @@ class SDSClient(object):
                                             search_filter=search_filter,
                                             attributes=mhs_attributes)
 
-        logger.info("0007", "{message_id} - for query: {party_key} {interaction_id}",
-                    {"message_id": message_id, "party_key": party_key, "interaction_id": interaction_id})
+        logger.info("0007", "{message_id} - for query: {party_key} {interaction_id}; Search base: {search_base}, Search filter: {search_filter}, Attributes: {attributes}",
+                    {"message_id": message_id, "party_key": party_key, "interaction_id": interaction_id,
+                    "search_base" : self.search_base, "search_filter": search_filter, "attributes": mhs_attributes})
 
         response = await self._get_query_result(message_id)
         logger.info("0008", "Found mhs details for {message_id}", {"message_id": message_id})
