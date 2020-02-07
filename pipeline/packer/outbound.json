@@ -18,7 +18,7 @@
       "changes": [
         "EXPOSE 80",
         "WORKDIR {{user `app_dir`}}/{{user `outbound_dir`}}",
-        "ENTRYPOINT pipenv run start-outbound"
+        "ENTRYPOINT {{user `app_dir`}}/common/set-dns-servers.sh pipenv run start-outbound"
       ]
     }
   ],
