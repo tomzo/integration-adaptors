@@ -70,7 +70,7 @@ case "${command}" in
     ;;
   build_docker_dns_local)
     REPOSITORY_URI=$IMAGE_REPO_NAME
-    IMAGE_TAG=$(git rev-parse HEAD | cut -c 1-7)
+    IMAGE_TAG=$(git rev-parse HEAD | cut -c 1-8)
     cd unbound-dns
     docker build -t $REPOSITORY_URI:latest .
     docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
@@ -80,7 +80,7 @@ case "${command}" in
     AWS_ACCOUNT_ID=$(dojo "aws sts get-caller-identity | jq -r .Account")
     REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/$IMAGE_REPO_NAME
     ./tasks build_docker_dns_local
-    COMMIT_HASH=$(git rev-parse HEAD | cut -c 1-7)
+    COMMIT_HASH=$(git rev-parse HEAD | cut -c 1-8)
     IMAGE_TAG=${COMMIT_HASH}
     docker tag $IMAGE_REPO_NAME $REPOSITORY_URI:$IMAGE_TAG
     docker tag $IMAGE_REPO_NAME $REPOSITORY_URI:latest
