@@ -2,7 +2,10 @@
 
 set -Eeo pipefail
 
+IMAGE_REPO_NAME=mhs-unbound-dns
+
 AWS_REGION=eu-west-2
+AWS_DEFAULT_REGION=$AWS_REGION
 
 function get_aws_ssm_secret {
   secret_id=$1
@@ -29,6 +32,10 @@ function check_env {
     echo "Must set NHS_ENVIRONMENT"
     exit 1
   fi
+}
+
+function docker_login {
+  eval $(dojo "aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION")
 }
 
 command="$1"
@@ -60,6 +67,28 @@ case "${command}" in
     # test that docker image trusts the server certificate in PTL-integration
     docker run --rm -v $PWD:/test --entrypoint sh $IMAGE -c "openssl verify -verbose /test/test-assets/smsp.crt"
     docker run --rm -v $PWD:/test --entrypoint sh $IMAGE -c "openssl verify -verbose /test/test-assets/pds-ldaps.crt"
+    ;;
+  build_docker_dns_local)
+    REPOSITORY_URI=$IMAGE_REPO_NAME
+    IMAGE_TAG=$(git rev-parse HEAD | cut -c 1-7)
+    cd unbound-dns
+    docker build -t $REPOSITORY_URI:latest .
+    docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+    ;;
+  build_docker_dns)
+    docker_login
+    AWS_ACCOUNT_ID=$(dojo "aws sts get-caller-identity | jq -r .Account")
+    REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/$IMAGE_REPO_NAME
+    ./tasks build_docker_dns_local
+    COMMIT_HASH=$(git rev-parse HEAD | cut -c 1-7)
+    IMAGE_TAG=${COMMIT_HASH}
+    docker tag $IMAGE_REPO_NAME $REPOSITORY_URI:$IMAGE_TAG
+    docker tag $IMAGE_REPO_NAME $REPOSITORY_URI:latest
+    docker push $REPOSITORY_URI:latest
+    docker push $REPOSITORY_URI:$IMAGE_TAG
+    ;;
+  test_docker_dns)
+    echo "TODO: dns docker image tests"
     ;;
   _e2e_tests)
     check_env
