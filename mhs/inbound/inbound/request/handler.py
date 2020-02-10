@@ -43,7 +43,7 @@ class InboundHandler(base_handler.BaseHandler):
 
     @time_request
     async def post(self):
-        logger.info('001', 'Inbound POST received: {request}', {'request': self.request})
+        logger.info('001', 'Inbound POST received: {request}; headers: {headers}; body: {body}', {'request': self.request, 'body': self.request.body, 'headers': self.request.headers})
 
         request_message = self._extract_incoming_ebxml_request_message()
 
