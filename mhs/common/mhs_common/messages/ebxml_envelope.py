@@ -117,6 +117,17 @@ class EbxmlEnvelope(envelope.Envelope):
 
             EbxmlEnvelope._add_if_present(extracted_values, element_to_extract.name, extracted_value)
 
+
+        if 'RefToMessageId' not in extracted_values:
+
+            conversation_id = EbxmlEnvelope._extract_ebxml_text_value(xml_tree,
+                                                                     'ConversationId',
+                                                                     parent=None,
+                                                                     required=True)
+
+            EbxmlEnvelope._add_if_present(extracted_values, 'RefToMessageId', conversation_id)
+
+
         return extracted_values
 
     @staticmethod
