@@ -112,7 +112,7 @@ class CommonAsynchronousWorkflow(CommonWorkflow):
 
     @timing.time_function
     async def handle_inbound_message(self, message_id: str, correlation_id: str, work_description: wd.WorkDescription,
-                                     payload: str):
+                                     payload: str, manifest: str = None):
         logger.info('0010', 'Entered {WorkflowName} workflow to handle inbound message',
                     {'WorkflowName': self.workflow_name})
         logger.audit('0103', '{WorkflowName} inbound workflow invoked. Message received from spine',
@@ -122,7 +122,7 @@ class CommonAsynchronousWorkflow(CommonWorkflow):
                                             wd.MessageStatus.INBOUND_RESPONSE_RECEIVED,
                                             self.store_retries)
 
-        await self._publish_message_to_inbound_queue(message_id, correlation_id, work_description, payload)
+        await self._publish_message_to_inbound_queue(message_id, correlation_id, work_description, payload, manifest)
 
         logger.info('0015', 'Placed message onto inbound queue successfully')
         await wd.update_status_with_retries(work_description,
@@ -138,10 +138,11 @@ class CommonAsynchronousWorkflow(CommonWorkflow):
                                                 message_id: str,
                                                 correlation_id: str,
                                                 work_description: wd.WorkDescription,
-                                                payload: str):
+                                                payload: str,
+                                                manifest: str):
         for retry_num in range(self.inbound_queue_max_retries + 1):
             try:
-                await self._put_message_onto_queue_with(message_id, correlation_id, payload)
+                await self._put_message_onto_queue_with(message_id, correlation_id, payload, manifest)
                 break
             except Exception as e:
                 logger.warning('0012', 'Failed to put message onto inbound queue due to {Exception}', {'Exception': e})
@@ -174,8 +175,8 @@ class CommonAsynchronousWorkflow(CommonWorkflow):
             logger.warning('0005', 'Error encountered whilst obtaining outbound URL. {exception}', {'exception': e})
             raise e
 
-    async def _put_message_onto_queue_with(self, message_id, correlation_id, payload, attachments=None):
-        await self.queue_adaptor.send_async({'payload': payload, 'attachments': attachments or []},
+    async def _put_message_onto_queue_with(self, message_id, correlation_id, payload, attachments=None, manifest=None):
+        await self.queue_adaptor.send_async({'payload': payload, 'attachments': attachments or [], 'manifest': manifest},
                                             properties={'message-id': message_id,
                                                         'correlation-id': correlation_id})
 

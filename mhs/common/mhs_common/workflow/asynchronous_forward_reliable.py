@@ -83,7 +83,7 @@ class AsynchronousForwardReliableWorkflow(asynchronous_reliable.AsynchronousReli
 
     @timing.time_function
     async def handle_unsolicited_inbound_message(self, message_id: str, correlation_id: str, payload: str,
-                                                 attachments: list):
+                                                 attachments: list, manifest: str):
         logger.info('0005', 'Entered async forward reliable workflow to handle unsolicited inbound message')
         logger.audit('0101', 'Unsolicited inbound {WorkflowName} workflow invoked.',
                      {'WorkflowName': self.workflow_name})
@@ -93,7 +93,7 @@ class AsynchronousForwardReliableWorkflow(asynchronous_reliable.AsynchronousReli
 
         for retry_num in range(self.inbound_queue_max_retries + 1):
             try:
-                await self._put_message_onto_queue_with(message_id, correlation_id, payload, attachments=attachments)
+                await self._put_message_onto_queue_with(message_id, correlation_id, payload, attachments=attachments, manifest=manifest)
                 break
             except Exception as e:
                 logger.warning('0006', 'Failed to put unsolicited message onto inbound queue due to {Exception}',

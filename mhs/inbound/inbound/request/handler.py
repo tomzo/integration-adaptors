@@ -11,7 +11,7 @@ import mhs_common.workflow as workflow
 import tornado.web
 from mhs_common.configuration import configuration_manager
 from mhs_common.handler import base_handler
-from mhs_common.messages.envelope import MESSAGE, CONVERSATION_ID, MESSAGE_ID, RECEIVED_MESSAGE_ID
+from mhs_common.messages.envelope import MESSAGE, CONVERSATION_ID, MESSAGE_ID, RECEIVED_MESSAGE_ID, MANIFEST
 from mhs_common.state import persistence_adaptor as pa
 from mhs_common.state import work_description as wd
 from mhs_common.state.persistence_adaptor import PersistenceAdaptor
@@ -57,14 +57,14 @@ class InboundHandler(base_handler.BaseHandler):
         ref_to_message_id = self._extract_ref_message(request_message)
         correlation_id = self._extract_correlation_id(request_message)
         self._extract_message_id(request_message)
-
+        received_manifest = request_message.message_dictionary[MANIFEST]
         received_message = request_message.message_dictionary[MESSAGE]
 
         try:
             work_description = await wd.get_work_description_from_store(self.work_description_store, ref_to_message_id)
         except wd.EmptyWorkDescriptionError as e:
             await self._handle_no_work_description_found_for_request(e, ref_to_message_id, correlation_id,
-                                                                     request_message, received_message)
+                                                                     request_message, received_message, received_manifest)
             return
 
         message_workflow = self.workflows[work_description.workflow]
@@ -73,7 +73,7 @@ class InboundHandler(base_handler.BaseHandler):
 
         try:
             await message_workflow.handle_inbound_message(ref_to_message_id, correlation_id, work_description,
-                                                          received_message)
+                                                          received_message, received_manifest)
             self._send_ack(request_message)
         except Exception as e:
             logger.error('006', 'Exception in workflow {exception}', {'exception': e})
@@ -84,7 +84,7 @@ class InboundHandler(base_handler.BaseHandler):
                                                             ref_to_message_id: str, correlation_id: str,
                                                             request_message:
                                                             ebxml_request_envelope.EbxmlRequestEnvelope,
-                                                            received_message: str):
+                                                            received_message: str, manifest: str):
         # Lookup workflow for request
         interaction_id = request_message.message_dictionary[ebxml_envelope.ACTION]
         interaction_details = self._get_interaction_details(interaction_id)
@@ -94,7 +94,7 @@ class InboundHandler(base_handler.BaseHandler):
         # So let the workflow handle this.
         if isinstance(message_workflow, forward_reliable.AsynchronousForwardReliableWorkflow):
             await self.handle_forward_reliable_unsolicited_request(correlation_id, message_workflow, received_message,
-                                                                   ref_to_message_id, request_message)
+                                                                   ref_to_message_id, request_message, manifest)
 
         # If not, then something has gone wrong
         else:
@@ -109,14 +109,14 @@ class InboundHandler(base_handler.BaseHandler):
                                                           forward_reliable_workflow:
                                                           workflow.AsynchronousForwardReliableWorkflow,
                                                           received_message: str, ref_to_message_id: str,
-                                                          request_message: ebxml_request_envelope.EbxmlRequestEnvelope):
+                                                          request_message: ebxml_request_envelope.EbxmlRequestEnvelope, manifest):
         logger.info('002', 'Received unsolicited inbound request for the forward-reliable workflow. Passing the '
                            'request to forward-reliable workflow.')
         attachments = request_message.message_dictionary[ebxml_request_envelope.ATTACHMENTS]
         try:
             await forward_reliable_workflow.handle_unsolicited_inbound_message(ref_to_message_id, correlation_id,
                                                                                received_message,
-                                                                               attachments)
+                                                                               attachments, manifest)
             self._send_ack(request_message)
         except Exception as e:
             logger.error('011', 'Exception in workflow {exception}', {'exception': e})
@@ -182,6 +182,14 @@ class InboundHandler(base_handler.BaseHandler):
         log.message_id.set(message_id)
         logger.info('010', 'Found message id on inbound message.')
         return message_id
+
+    def _extract_manfiest(self, message):
+        """
+            Extract the Manifest information from SOAP messag
+        """
+        manifest = message.message_dictionary[MANIFEST]
+        logger.info('011', 'Found manifest information')
+        return manifest
 
     def _extract_incoming_ebxml_request_message(self):
         try:

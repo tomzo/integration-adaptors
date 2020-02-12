@@ -24,6 +24,7 @@ RECEIVED_MESSAGE_ID = "received_message_id"
 ERROR_CODE = "error_code"
 SEVERITY = "severity"
 DESCRIPTION = "description"
+MANIFEST = "manifest"
 
 EBXML_NAMESPACE = "eb"
 SOAP_NAMESPACE = "SOAP"
@@ -51,7 +52,8 @@ class EbxmlEnvelope(envelope.Envelope):
         _ElementToExtractWhenParsing(ACTION, 'Action'),
         _ElementToExtractWhenParsing(MESSAGE_ID, 'MessageId', xml_parent='MessageData'),
         _ElementToExtractWhenParsing(TIMESTAMP, 'Timestamp', xml_parent='MessageData'),
-        _ElementToExtractWhenParsing(RECEIVED_MESSAGE_ID, 'RefToMessageId', xml_parent='MessageData')
+        _ElementToExtractWhenParsing(RECEIVED_MESSAGE_ID, 'RefToMessageId', xml_parent='MessageData'),
+        _ElementToExtractWhenParsing(MANIFEST, 'Manifest')
     ]
 
     def __init__(self, template_file: str, message_dictionary: Dict[str, Any]):

@@ -22,6 +22,7 @@ TO_ASID = 'to_asid'
 FROM_ASID = 'from_asid'
 RECEIVED_MESSAGE_ID = "received_message_id"
 MESSAGE = "hl7_message"
+MANIFEST = "manifest"
 CONTENT_TYPE_HEADER_NAME = "Content-Type"
 TEMPLATES_DIR = "data/templates"
 
