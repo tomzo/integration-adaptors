@@ -125,7 +125,7 @@ class EbxmlEnvelope(envelope.Envelope):
                                                                      parent=None,
                                                                      required=True)
 
-            EbxmlEnvelope._add_if_present(extracted_values, 'RefToMessageId', conversation_id)
+            EbxmlEnvelope._add_if_present(extracted_values, RECEIVED_MESSAGE_ID, conversation_id)
 
 
         return extracted_values
