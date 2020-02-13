@@ -108,9 +108,14 @@ class EbxmlEnvelope(envelope.Envelope):
 
             if element_to_extract.xml_name == "RefToMessageId":
                 extracted_value = EbxmlEnvelope._extract_ebxml_text_value(xml_tree,
-                                                                         element_to_extract.xml_name,
-                                                                         parent=element_to_extract.xml_parent,
-                                                                         required=False)
+                                                                          element_to_extract.xml_name,
+                                                                          parent=element_to_extract.xml_parent,
+                                                                          required=False)
+            elif element_to_extract.xml_name == "Manifest":
+                extracted_value = EbxmlEnvelope._extract_manifest_information(xml_tree,
+                                                                              element_to_extract.xml_name,
+                                                                              parent=None,
+                                                                              required=True)
             else:
                 extracted_value = EbxmlEnvelope._extract_ebxml_text_value(xml_tree,
                                                                          element_to_extract.xml_name,
@@ -121,7 +126,6 @@ class EbxmlEnvelope(envelope.Envelope):
 
 
         if 'RefToMessageId' not in extracted_values:
-
             conversation_id = EbxmlEnvelope._extract_ebxml_text_value(xml_tree,
                                                                      'ConversationId',
                                                                      parent=None,
@@ -164,6 +168,17 @@ class EbxmlEnvelope(envelope.Envelope):
             text = value.text
 
         return text
+
+    @staticmethod
+    def _extract_manifest_information(xml_tree: Element, element_name: str, parent: str = None,
+                                      required: bool = False):
+        value = EbxmlEnvelope._extract_ebxml_value(xml_tree, element_name, parent, required)
+        manifest = []
+        if value is not None:
+            for reference in value:
+                manifest.append(reference.attrib["{" + NAMESPACES['xlink'] + "}" + 'href'])
+
+        return manifest
 
     @staticmethod
     def _extract_attribute(xml_tree: Element, element_name: str, attribute_namespace: Dict[str, str],
