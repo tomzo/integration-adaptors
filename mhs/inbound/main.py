@@ -78,19 +78,24 @@ def start_inbound_server(local_certs_file: str, ca_certs_file: str, key_file: st
                                                              config_manager=config_manager))])
 
     # Ensure Client authentication
-    ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    ssl_ctx.load_cert_chain(local_certs_file, key_file)
-    # The docs suggest we have to specify both that we must verify the client cert and the locations
-    ssl_ctx.verify_mode = ssl.CERT_REQUIRED
-    ssl_ctx.load_verify_locations(ca_certs_file)
+    if not config.get_config('NO_TLS', default='False'):
+        ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_ctx.load_cert_chain(local_certs_file, key_file)
+        # The docs suggest we have to specify both that we must verify the client cert and the locations
+        ssl_ctx.verify_mode = ssl.CERT_REQUIRED
+        ssl_ctx.load_verify_locations(ca_certs_file)
 
-    inbound_server = tornado.httpserver.HTTPServer(inbound_application, ssl_options=ssl_ctx)
-    inbound_server.listen(443)
+        inbound_server = tornado.httpserver.HTTPServer(inbound_application, ssl_options=ssl_ctx)
+        inbound_server.listen(443)
+    else:
+        inbound_server = tornado.httpserver.HTTPServer(inbound_application)
+        inbound_server.listen(80)
 
-    healthcheck_application = tornado.web.Application([
-        ("/healthcheck", healthcheck_handler.HealthcheckHandler)
-    ])
-    healthcheck_application.listen(80)
+    # TODO: merge it to inbound_application when no tls
+    # healthcheck_application = tornado.web.Application([
+    #     ("/healthcheck", healthcheck_handler.HealthcheckHandler)
+    # ])
+    # healthcheck_application.listen(80)
 
     logger.info('011', 'Starting inbound server')
     tornado.ioloop.IOLoop.current().start()
@@ -101,10 +106,14 @@ def main():
     secrets.setup_secret_config("MHS")
     log.configure_logging()
 
-    certificates = certs.Certs.create_certs_files(definitions.ROOT_DIR,
-                                                  private_key=secrets.get_secret_config('CLIENT_KEY'),
-                                                  local_cert=secrets.get_secret_config('CLIENT_CERT'),
-                                                  ca_certs=secrets.get_secret_config('CA_CERTS'))
+    if config.get_config('NO_TLS', default='False'):
+        certificates = certs.Certs()
+    else:
+        certificates = certs.Certs.create_certs_files(definitions.ROOT_DIR,
+                                                      private_key=secrets.get_secret_config('CLIENT_KEY'),
+                                                      local_cert=secrets.get_secret_config('CLIENT_CERT'),
+                                                      ca_certs=secrets.get_secret_config('CA_CERTS'))
+
     party_key = secrets.get_secret_config('PARTY_KEY')
 
     workflows = initialise_workflows()
