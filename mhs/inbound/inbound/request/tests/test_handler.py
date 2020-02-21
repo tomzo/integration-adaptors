@@ -130,13 +130,6 @@ class TestInboundHandler(tornado.testing.AsyncHTTPTestCase):
         self.assertEqual(response.code, 500)
         self.assertEqual('500: Exception in workflow', response.body.decode())
 
-    def test_no_reference_to_id(self):
-        request_body = file_utilities.FileUtilities.get_file_string(str(self.message_dir / NO_REF_FILE))
-
-        ack_response = self.fetch("/", method="POST", body=request_body, headers=ASYNC_CONTENT_TYPE_HEADERS)
-
-        self.assertEqual(ack_response.code, 500)
-
     @unittest.mock.patch.object(log, "inbound_message_id")
     @unittest.mock.patch.object(log, "correlation_id")
     @unittest.mock.patch.object(log, "message_id")
