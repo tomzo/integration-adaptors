@@ -79,9 +79,12 @@ class TestInboundHandler(tornado.testing.AsyncHTTPTestCase):
         self.mock_workflow = unittest.mock.MagicMock()
         self.mock_workflow.handle_inbound_message.return_value = test_utilities.awaitable(None)
 
+        self.mock_raw_queue = unittest.mock.MagicMock()
+
         self.mock_forward_reliable_workflow = unittest.mock.create_autospec(
             forward_reliable.AsynchronousForwardReliableWorkflow)
         self.mocked_workflows = {
+            workflow.RAW_QUEUE: self.mock_raw_queue,
             workflow.ASYNC_EXPRESS: self.mock_workflow,
             workflow.FORWARD_RELIABLE: self.mock_forward_reliable_workflow
         }
@@ -118,6 +121,14 @@ class TestInboundHandler(tornado.testing.AsyncHTTPTestCase):
 
         ack_response = self.fetch("/", method="POST", body=request_body, headers=ASYNC_CONTENT_TYPE_HEADERS)
         self.mocked_workflows[workflow.ASYNC_EXPRESS].handle_inbound_message.assert_called()
+
+        self.assertEqual(ack_response.code, 200)
+
+    def test_raw_message_queue(self):
+        request_body = file_utilities.FileUtilities.get_file_string(str(self.message_dir / REQUEST_FILE))
+
+        ack_response = self.fetch("/", method="POST", body=request_body, headers=ASYNC_CONTENT_TYPE_HEADERS)
+        self.mocked_workflows[workflow.RAW_QUEUE].send_raw_async.assert_called_with(request_body.encode('utf-8'))
 
         self.assertEqual(ack_response.code, 200)
 

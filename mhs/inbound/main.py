@@ -31,6 +31,10 @@ def initialise_workflows() -> Dict[str, workflow.CommonWorkflow]:
         host=config.get_config('INBOUND_QUEUE_URL'),
         username=secrets.get_secret_config('INBOUND_QUEUE_USERNAME'),
         password=secrets.get_secret_config('INBOUND_QUEUE_PASSWORD'))
+    raw_queue_adaptor = proton_queue_adaptor.ProtonQueueAdaptor(
+        host=config.get_config('INBOUND_RAW_QUEUE_URL'),
+        username=secrets.get_secret_config('INBOUND_QUEUE_USERNAME'),
+        password=secrets.get_secret_config('INBOUND_QUEUE_PASSWORD'))
     sync_async_store = dynamo_persistence_adaptor.DynamoPersistenceAdaptor(
         table_name=config.get_config('SYNC_ASYNC_STATE_TABLE_NAME'))
 
@@ -40,7 +44,8 @@ def initialise_workflows() -> Dict[str, workflow.CommonWorkflow]:
     sync_async_delay = int(config.get_config('SYNC_ASYNC_STORE_RETRY_DELAY', default='100'))
     work_description_store = dynamo_persistence_adaptor.DynamoPersistenceAdaptor(
         table_name=config.get_config('STATE_TABLE_NAME'))
-    return workflow.get_workflow_map(inbound_async_queue=queue_adaptor,
+    return workflow.get_workflow_map(raw_queue_adaptor=raw_queue_adaptor,
+                                     inbound_async_queue=queue_adaptor,
                                      work_description_store=work_description_store,
                                      sync_async_store=sync_async_store,
                                      persistence_store_max_retries=persistence_store_max_retries,

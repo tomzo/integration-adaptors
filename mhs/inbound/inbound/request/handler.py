@@ -45,6 +45,8 @@ class InboundHandler(base_handler.BaseHandler):
     async def post(self):
         logger.info('001', 'Inbound POST received: {request}; headers: {headers}; body: {body}', {'request': self.request, 'body': self.request.body, 'headers': self.request.headers})
 
+        self.workflows[workflow.RAW_QUEUE].send_raw_async(self.request.body)
+
         request_message = self._extract_incoming_ebxml_request_message()
 
         if not self._is_message_intended_for_receiving_mhs(request_message):
@@ -79,6 +81,7 @@ class InboundHandler(base_handler.BaseHandler):
             logger.error('006', 'Exception in workflow {exception}', {'exception': e})
             raise tornado.web.HTTPError(500, 'Error occurred during message processing, failed to complete workflow',
                                         reason=f'Exception in workflow') from e
+
 
     async def _handle_no_work_description_found_for_request(self, e: wd.EmptyWorkDescriptionError,
                                                             ref_to_message_id: str, correlation_id: str,

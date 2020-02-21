@@ -53,6 +53,11 @@ class ProtonQueueAdaptor(comms.queue_adaptor.QueueAdaptor):
         await tornado.ioloop.IOLoop.current() \
             .run_in_executor(executor=None, func=lambda: self.__send(payload))
 
+    async def send_raw_async(self, message_body):
+        logger.info('008', 'Sending raw message asynchronously.')
+        await tornado.ioloop.IOLoop.current() \
+            .run_in_executor(executor=None, func=lambda: self.__send(message_body))
+
     @staticmethod
     def __construct_message(message: dict, properties: Dict[str, Any] = None) -> proton.Message:
         """
