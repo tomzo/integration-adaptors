@@ -6,6 +6,9 @@ pipelines:
     materials:
       git:
         type: configrepo
+      mhs:
+        pipeline: mhs
+        stage: test
     stages:
       - build:
           clean_workspace: true

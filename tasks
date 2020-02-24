@@ -119,6 +119,14 @@ case "${command}" in
   e2e_tests)
     dojo -c Dojofile-py "./tasks _e2e_tests"
     ;;
+  _unit_tests_inbound)
+    cd mhs/inbound
+    pipenv install -d
+    pipenv run unittests
+    ;;
+  unit_tests_inbound)
+    dojo -c Dojofile-py "./tasks _unit_tests_inbound"
+    ;;
   *)
       echo "Invalid command: '${command}'"
       exit 1
