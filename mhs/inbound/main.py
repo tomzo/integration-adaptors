@@ -72,10 +72,10 @@ def start_inbound_server(local_certs_file: str, ca_certs_file: str, key_file: st
     :param party_key: The party key to use to identify this MHS.
     """
 
-    inbound_application = tornado.web.Application(
-        [(r"/.*", async_request_handler.InboundHandler, dict(workflows=workflows, party_id=party_key,
+    handlers = [(r"/.*", async_request_handler.InboundHandler, dict(workflows=workflows, party_id=party_key,
                                                              work_description_store=persistence_store,
-                                                             config_manager=config_manager))])
+                                                             config_manager=config_manager))]
+    healthcheck_endpoint = ("/healthcheck", healthcheck_handler.HealthcheckHandler)
 
     # Ensure Client authentication
     if not config.get_config('NO_TLS', default='False'):
@@ -85,17 +85,19 @@ def start_inbound_server(local_certs_file: str, ca_certs_file: str, key_file: st
         ssl_ctx.verify_mode = ssl.CERT_REQUIRED
         ssl_ctx.load_verify_locations(ca_certs_file)
 
-        inbound_server = tornado.httpserver.HTTPServer(inbound_application, ssl_options=ssl_ctx)
+        inbound_server = tornado.httpserver.HTTPServer(tornado.web.Application(handlers), ssl_options=ssl_ctx)
         inbound_server.listen(443)
+        # Start health check on port 80
+        healthcheck_application = tornado.web.Application([
+            ("/healthcheck", healthcheck_handler.HealthcheckHandler)
+        ])
+        healthcheck_application.listen(80)
     else:
-        inbound_server = tornado.httpserver.HTTPServer(inbound_application)
+        # Add health check endpoint
+        handlers.insert(0, healthcheck_endpoint)
+        inbound_server = tornado.httpserver.HTTPServer(tornado.web.Application(handlers))
         inbound_server.listen(80)
 
-    # TODO: merge it to inbound_application when no tls
-    # healthcheck_application = tornado.web.Application([
-    #     ("/healthcheck", healthcheck_handler.HealthcheckHandler)
-    # ])
-    # healthcheck_application.listen(80)
 
     logger.info('011', 'Starting inbound server')
     tornado.ioloop.IOLoop.current().start()
