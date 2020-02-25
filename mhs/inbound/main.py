@@ -86,17 +86,17 @@ def start_inbound_server(local_certs_file: str, ca_certs_file: str, key_file: st
         ssl_ctx.load_verify_locations(ca_certs_file)
 
         inbound_server = tornado.httpserver.HTTPServer(tornado.web.Application(handlers), ssl_options=ssl_ctx)
-        inbound_server.listen(8443)
+        inbound_server.listen(443)
         logger.info('011', 'Started main handler listener at 443')
         # Start health check on port 80
         healthcheck_application = tornado.web.Application([healthcheck_endpoint])
-        healthcheck_application.listen(8080)
+        healthcheck_application.listen(80)
         logger.info('011', 'Started health check listener at 80')
     else:
         # Add health check endpoint
         handlers.insert(0, healthcheck_endpoint)
         inbound_server = tornado.httpserver.HTTPServer(tornado.web.Application(handlers))
-        inbound_server.listen(8080)
+        inbound_server.listen(80)
         logger.info('011', 'Started main handler and health check listener at 80')
 
 
