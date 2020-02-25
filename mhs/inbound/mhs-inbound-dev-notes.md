@@ -33,10 +33,25 @@ After installing/configuring dependencies with pipenv, open PyCharm project usin
 ```
 Make sure project interpreter is configured as Pipenv (Preferences -> Project -> Project interpreter)
 
-Make a copy of `nhs-inbound-env-example.yaml` and fill it with data (mostly certificates - be vary of indentation for them) obtained earlier for OpenTest access
+### Dependencies set up
 
-Last step is to add new Python Run Configuration:
-1. Point script path to `main.py`
-2. Switch to EnvFile tab
-3. Enable EnvFile plugin and add yaml file you edited and saved earlier.
-4. Project is ready to run!
+The following command will bring up dynamodb and rabbitmq:
+```
+docker-compose -f  docker-compose-inbound.yml up
+```
+
+### Starting the inbound component locally
+
+To configure the environment variables, run:
+```
+source stub-config.sh
+```
+Launch the python environment with dependencies:
+```
+pipenv shell
+```
+To start the inbound server, run:
+```
+python main.py
+```
+
