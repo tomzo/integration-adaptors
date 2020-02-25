@@ -16,3 +16,4 @@ export MHS_DYNAMODB_ENDPOINT_URL=http://localhost:8000
 # when connecting to local DynamoDB
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
+export MHS_NO_TLS=True
