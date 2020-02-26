@@ -129,7 +129,7 @@ class TestInboundHandler(tornado.testing.AsyncHTTPTestCase):
         request_body = file_utilities.FileUtilities.get_file_string(str(self.message_dir / REQUEST_FILE))
 
         ack_response = self.fetch("/", method="POST", body=request_body, headers=ASYNC_CONTENT_TYPE_HEADERS)
-        self.mocked_workflows[workflow.RAW_QUEUE].send_raw_async.assert_called_with(request_body.encode('utf-8'))
+        self.mocked_workflows[workflow.RAW_QUEUE].send_raw_async.assert_called_with(request_body.encode('utf-8'), 'multipart/related; boundary="--=_MIME-Boundary"')
 
         self.assertEqual(ack_response.code, 200)
 

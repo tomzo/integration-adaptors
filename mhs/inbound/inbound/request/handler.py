@@ -45,7 +45,7 @@ class InboundHandler(base_handler.BaseHandler):
     async def post(self):
         logger.info('001', 'Inbound POST received: {request}; headers: {headers}; body: {body}', {'request': self.request, 'body': self.request.body, 'headers': self.request.headers})
 
-        await self.workflows[workflow.RAW_QUEUE].send_raw_async(self.request.body)
+        await self.workflows[workflow.RAW_QUEUE].send_raw_async(self.request.body, self.request.headers['Content-Type'])
 
         request_message = self._extract_incoming_ebxml_request_message()
 
