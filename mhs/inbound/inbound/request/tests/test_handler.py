@@ -80,6 +80,7 @@ class TestInboundHandler(tornado.testing.AsyncHTTPTestCase):
         self.mock_workflow.handle_inbound_message.return_value = test_utilities.awaitable(None)
 
         self.mock_raw_queue = unittest.mock.MagicMock()
+        self.mock_raw_queue.send_raw_async.return_value = test_utilities.awaitable(None)
 
         self.mock_forward_reliable_workflow = unittest.mock.create_autospec(
             forward_reliable.AsynchronousForwardReliableWorkflow)
